@@ -141,13 +141,32 @@ namespace Microsoft.Azure.Mobile.Crashes
              */
             if (_errorLog != null && _exception != null)
             {
-                /* Generate structured data for the C# exception and overwrite the Java exception. */
-                _errorLog.Exception = GenerateModelException(_exception);
+                /* Look for Java exception anywhere in causal chain. */
+                var isMixedJavaAndDotNetException = false;
+                var cause = _exception;
+                while (cause != null)
+                {
+                    if (cause is Java.Lang.Exception)
+                    {
+                        isMixedJavaAndDotNetException = true;
+                        break;
+                    }
+                    cause = cause.InnerException;
+                }
 
-                /* Tell the Android SDK to overwrite the modified error log on disk. */
-                AndroidExceptionDataManager.SaveWrapperSdkErrorLog(_errorLog);
+                /*
+                 * Generate structured data for the C# exception and overwrite the Java exception to enhance it.
+                 * Unless if we java exception in chain, this would make it worse.
+                 */
+                if (!isMixedJavaAndDotNetException)
+                {
+                    _errorLog.Exception = GenerateModelException(_exception);
 
-                /* Save the System.Exception to disk as a serialized object. */
+                    /* Tell the Android SDK to overwrite the modified error log on disk. */
+                    AndroidExceptionDataManager.SaveWrapperSdkErrorLog(_errorLog);
+                }
+
+                /* Save the System.Exception to disk as a serialized object for client side inspection. */
                 byte[] exceptionData = CrashesUtils.SerializeException(_exception);
                 AndroidExceptionDataManager.SaveWrapperExceptionData(exceptionData, _errorLog.Id);
             }

@@ -38,19 +38,21 @@ namespace Contoso.Android.Puppet
             MobileCenter.SetLogUrl("https://in-integration.dev.avalanch.es");
             Distribute.SetInstallUrl("http://install.asgard-int.trafficmanager.net");
             Distribute.SetApiUrl("https://asgard-int.trafficmanager.net/api/v0.1");
-            MobileCenter.Start("bff0949b-7970-439d-9745-92cdc59b10fe", typeof(Analytics), typeof(Crashes), typeof(Distribute));
+            MobileCenter.Start("bff0949b-7970-439d-9745-92cdc59b10fe", typeof(Analytics), typeof(Crashes));
             Analytics.TrackEvent("myEvent", new Dictionary<string, string> { { "someKey", "someValue" } });
             MobileCenterLog.Info(LogTag, "MobileCenter.InstallId=" + MobileCenter.InstallId);
             MobileCenterLog.Info(LogTag, "MobileCenter.HasCrashedInLastSession=" + Crashes.HasCrashedInLastSession);
             Crashes.GetLastSessionCrashReportAsync().ContinueWith(report =>
             {
-                MobileCenterLog.Info(LogTag, "MobileCenter.LastSessionCrashReport=" + report.Result?.AndroidDetails?.Throwable);
+                MobileCenterLog.Info(LogTag, "MobileCenter.LastThrowable=" + report.Result?.AndroidDetails?.Throwable);
+                MobileCenterLog.Info(LogTag, "MobileCenter.LastException=" + report.Result?.Exception);
             });
         }
 
         protected override void OnDestroy()
         {
             // This will crash with super not called exception, pure java exception that we want to test
+            Java.Lang.Class.ForName("toto");
         }
     }
 }

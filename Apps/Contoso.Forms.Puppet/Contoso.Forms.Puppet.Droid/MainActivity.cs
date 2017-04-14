@@ -5,6 +5,7 @@ using Com.Microsoft.Azure.Mobile.Analytics;
 using Com.Microsoft.Azure.Mobile.Analytics.Channel;
 using Com.Microsoft.Azure.Mobile.Ingestion.Models;
 using Microsoft.Azure.Mobile;
+using Microsoft.Azure.Mobile.Crashes;
 
 namespace Contoso.Forms.Puppet.Droid
 {
@@ -23,6 +24,16 @@ namespace Contoso.Forms.Puppet.Droid
             AndroidAnalytics.SetListener(new AndroidAnalyticsListener());
 
             LoadApplication(new App());
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            Crashes.GetLastSessionCrashReportAsync().ContinueWith(report =>
+			{
+            	MobileCenterLog.Info(App.LogTag, "MobileCenter.LastThrowable=" + report.Result?.AndroidDetails?.Throwable);
+            	MobileCenterLog.Info(App.LogTag, "MobileCenter.LastException=" + report.Result?.Exception);
+            });
         }
     }
 
